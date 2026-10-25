@@ -340,6 +340,38 @@ async def durum(ctx, *, yazi: str = None):
         
     await ctx.send(f"✅ Botun durumu başarıyla değiştirildi: **{yazi}**", delete_after=5)
 
+# ================= GİZLİ DM GÖNDERME KOMUTU (!xxdm) =================
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def xxdm(ctx, target_name: str = None, *, mesaj: str = None):
+    # Komut mesajını hemen siliyoruz ki kimse senin yazdığını görmesin
+    try:
+        await ctx.message.delete()
+    except Exception:
+        pass
+
+    if not target_name or not mesaj:
+        await ctx.send("❌ Eksik kullanım! Örnek: `!xxdm ahmet123 Merhaba bu gizli bir mesajdır.`", delete_after=5)
+        return
+
+    # Sunucudaki üyeler arasında ismi veya kullanıcı adını arıyoruz (büyük/küçük harf duyarsız)
+    member = discord.utils.find(lambda m: target_name.lower() in m.name.lower() or (m.nick and target_name.lower() in m.nick.lower()), ctx.guild.members)
+
+    if not member:
+        await ctx.send(f"❌ **{target_name}** adında bir kullanıcı bu sunucuda bulunamadı!", delete_after=5)
+        return
+
+    try:
+        # Hedef kişinin DM kutusuna mesajı gönderiyoruz
+        embed = discord.Embed(title="🔒 Güvenlik Departmanı - Özel Bilgilendirme", description=mesaj, color=discord.Color.dark_gray())
+        embed.set_footer(text="Bu mesaj yetkili tarafından gizli olarak gönderilmiştir.")
+        await member.send(embed=embed)
+    except discord.Forbidden:
+        await ctx.send(f"⚠️ **{member.name}** adlı kullanıcının DM (Özel Mesaj) kutusu kapalı, mesaj iletilemedi!", delete_after=6)
+    except Exception as e:
+        print(f"xxdm hatası: {e}")
+
 # ====================================================================================
 
 @bot.command()
@@ -568,7 +600,7 @@ async def xxx222(ctx):
 async def yardım(ctx, *args):
     embed = discord.Embed(title="📖 Güvenlik Departmanı - Yardım Menüsü", description="Tüm bot komutları ve ne işe yaradıkları aşağıdadır:", color=discord.Color.dark_gray())
     embed.add_field(name="📑 Form Paneli", value="`!form` - İcraat, Dosya ve Ceza formlarını butonlu özel panel olarak açar.", inline=False)
-    embed.add_field(name="🛡️ Yönetim & Kanal Komutları", value="`!sil <miktar>` - Belirtilen sayıda mesajı kanaldan temizler.\n`!kurulum #kanal` - Kanalı kilitler ve otomatik karşılama kanalını ayarlar.\n`!kaydolkurulum #kanal` - 'Kısıtlı' ve 'Doğrulandi' rollerini oluşturur, TÜM kanalları kilitler ve butonlu paneli kurar.\n`!xmesaj <metin>` - Yazdığın duyuruyu embed olarak atar ve senin komut mesajını siler.\n`!sesgir [Kanal Adı]` - Bulunduğun ses kanalına veya yazılan ses kanalına botu sokar.\n`!sesçık` - Botu ses kanalından çıkarır.\n`!durum <metin>` - Botun 'Oynuyor' durumunu değiştirir.", inline=False)
+    embed.add_field(name="🛡️ Yönetim & Kanal Komutları", value="`!sil <miktar>` - Belirtilen sayıda mesajı kanaldan temizler.\n`!kurulum #kanal` - Kanalı kilitler ve otomatik karşılama kanalını ayarlar.\n`!kaydolkurulum #kanal` - 'Kısıtlı' ve 'Doğrulandi' rollerini oluşturur, TÜM kanalları kilitler ve butonlu paneli kurar.\n`!xmesaj <metin>` - Yazdığın duyuruyu embed olarak atar ve senin komut mesajını siler.\n`!xxdm <DiscordAdi> <metin>` - Yazdığın Discord adındaki kişiye gizlice DM (özel mesaj) gönderir ve senin komutunu siler.", inline=False)
     embed.add_field(name="🔗 Roblox Bağlantı & Grup Yönetimi", value="`!liste` - Roblox gruptaki rütbeleri yüksekten düşüğe sıralar.\n`!gruprütbever <roblox_adi> <role_id>` - Roblox kullanıcı adıyla rütbe verir.\n`!grupal <roblox_adi>` - Roblox kullanıcı adıyla rütbeyi en alta indirir.\n`!gruptanat <roblox_adi>` - Roblox kullanıcı adıyla gruptan ihraç eder.", inline=False)
     embed.add_field(name="🚨 Şikayet & Destek", value="`!şikayet` - Destek ve şikayet şablonlarını yetkili etiketleriyle gönderir.", inline=False)
     embed.set_footer(text="Güvenlik Departmanı Resmi Botu")
