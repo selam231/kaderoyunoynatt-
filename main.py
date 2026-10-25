@@ -618,7 +618,7 @@ async def gruptanat(ctx, roblox_username: str = None):
 
     del_req = requests.delete(url, headers=headers)
     if del_req.status_code == 200:
-        await ctx.send(f5f"🚫 **{target_roblox_name}** kullanıcı adlı kişi başarıyla Roblox grubundan atıldı!")
+        await ctx.send(f"🚫 **{target_roblox_name}** kullanıcı adlı kişi başarıyla Roblox grubundan atıldı!")
     else:
         await ctx.send("❌ İşlem başarısız oldu. Kullanıcı grupta olmayabilir veya yetkin yetersizdir.")
 
