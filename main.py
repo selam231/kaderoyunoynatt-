@@ -101,11 +101,7 @@ class KayitModal(discord.ui.Modal, title="🔗 Roblox Hesap Bağlama"):
         code = "BTF-" + ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
         pending_verifications[str(interaction.user.id)] = {"roblox_name": user_data["name"], "roblox_id": roblox_id, "code": code}
 
-        embed_dm = discord.Embed(
-            title="🔒 Gizli Roblox Doğrulama Kodu", 
-            description=f"Merhaba **{interaction.user.name}**!\nRoblox hesabını (`{user_data['name']}`) doğrulamak için özel kodun aşağıdadır:\n\n🔑 **Doğrulama Kodun:** **`{code}`**\n\n**Adımlar:**\n1️⃣ Roblox profilindeki **Bio / Hakkımda** kısmına bu kodu yapıştır.\n2️⃣ Profilini kaydettikten sonra kanaldaki **`✅ Hesabı Doğrula`** butonuna bas!", 
-            color=discord.Color.dark_gray()
-        )
+        embed_dm = discord.Embed(title="🔒 Gizli Roblox Doğrulama Kodu", description=f"Merhaba **{interaction.user.name}**!\nRoblox hesabını (`{user_data['name']}`) doğrulamak için özel kodun aşağıdadır:\n\n🔑 **Doğrulama Kodun:** **`{code}`**\n\n**Adımlar:**\n1️⃣ Roblox profilindeki **Bio / Hakkımda** kısmına bu kodu yapıştır.\n2️⃣ Profilini kaydettikten sonra kanaldaki **`✅ Hesabı Doğrula`** butonuna bas!", color=discord.Color.dark_gray())
         embed_dm.set_footer(text="Su Altı Taarruz - Özel Mesaj")
 
         try:
@@ -255,60 +251,4 @@ async def şikayet(ctx):
     embed = discord.Embed(title="🚨 Ticket & Şikayet Formları", description="Aşağıdaki şablonları kopyalarak ilgili kanala iletebilirsiniz:", color=discord.Color.dark_gray())
     
     embed.add_field(name="🎫 DESTEK TİCKETİ", value="```\nİsim:\nSorun:\nSS:\n```", inline=False)
-    embed.add_field(name="⚖️ ŞİKAYET TİCKETİ", value="```\nİsim:\nKit Rütbe:\nŞikayet Edilenin İsim:\nKit Rütbesi:\nSS:\n```", inline=False)
-    
-    embed.add_field(name="📌 Yetkili Etiketleri", value=tag_metin, inline=False)
-    embed.set_footer(text="Su Altı Taarruz Resmi Botu")
-    
-    await ctx.send(embed=embed)
-
-@bot.command()
-@commands.has_permissions(administrator=True)
-async def xmesaj(ctx, *, mesaj: str = None):
-    try:
-        await ctx.message.delete()
-    except Exception:
-        pass
-
-    if not mesaj:
-        await ctx.send("❌ Lütfen duyuru metnini yazın! Örnek: `!xmesaj Buraya yazılacak şey`", delete_after=5)
-        return
-
-    embed = discord.Embed(title="📢 Su Altı Taarruz Duyurusu", description=mesaj, color=discord.Color.dark_gray())
-    embed.set_footer(text=f"Yetkili: {ctx.author.name}", icon_url=ctx.author.display_avatar.url)
-
-    await ctx.send(embed=embed)
-
-@bot.command()
-@commands.has_permissions(manage_messages=True)
-async def sil(ctx, amount: int = None):
-    if amount is None or amount <= 0:
-        await ctx.send("❌ Lütfen silinecek mesaj sayısını girin! Örnek: `!sil 10`", delete_after=5)
-        return
-
-    deleted = await ctx.channel.purge(limit=amount + 1)
-    confirm_msg = await ctx.send(f"🗑️ **{len(deleted)-1}** adet mesaj başarıyla silindi!")
-    await confirm_msg.delete(delay=3)
-
-# ================= GİZLİ DM GÖNDERME KOMUTU (!xxdm) =================
-
-@bot.command()
-@commands.has_permissions(administrator=True)
-async def xxdm(ctx, target_name: str = None, *, mesaj: str = None):
-    try:
-        await ctx.message.delete()
-    except Exception:
-        pass
-
-    if not target_name or not mesaj:
-        await ctx.send("❌ Eksik kullanım! Örnek: `!xxdm ahmet123 Merhaba bu gizli bir mesajdır.`", delete_after=5)
-        return
-
-    member = discord.utils.find(lambda m: target_name.lower() in m.name.lower() or (m.nick and target_name.lower() in m.nick.lower()), ctx.guild.members)
-
-    if not member:
-        await ctx.send(f"❌ **{target_name}** adında bir kullanıcı bu sunucuda bulunamadı!", delete_after=5)
-        return
-
-    try:
-        embed = discord.Embed(title="🔒 Su Altı Taarruz - Özel Bilgilendirme", description
+    embed.add_field(name="⚖️ ŞİKAYET TİCKETİ", value="```\nİsim:\nKit Rütbe:\nŞikayet Ed
