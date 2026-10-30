@@ -64,14 +64,14 @@ class FormView(View):
     async def btn_icraat(self, interaction: discord.Interaction, button: Button):
         embed = discord.Embed(title="📋 İCRAAT FORMU", description="Aşağıdaki şablonu kopyalayıp **İcraat Kanalına** doldurarak atabilirsiniz:", color=discord.Color.dark_gray())
         embed.add_field(name="📝 Kopyalanabilir Şablon:", value="```\nİcraati yapan:\nİcraati yapanın rütbesi:\nİcraati:\nKanıtlar:\n```", inline=False)
-        embed.set_footer(text="Sualtı Taarruz Komutanlığı Resmi Botu")
+        embed.set_footer(text="Su Altı Taarruz Resmi Botu")
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @discord.ui.button(label="📁 Dosya Formu", style=discord.ButtonStyle.secondary, custom_id="btn_dosya_form")
     async def btn_dosya(self, interaction: discord.Interaction, button: Button):
         embed = discord.Embed(title="📁 DOSYA FORMU", description="Aşağıdaki şablonu kopyalayıp **Dosya Kanalına** doldurarak atabilirsiniz:", color=discord.Color.dark_gray())
         embed.add_field(name="📝 Kopyalanabilir Şablon:", value="```\nDosyayla ilgilenen:\nDosyayla İlgilenin Rütbesi:\nDosyalananın İsmi:\nDosyalananın Discord İsmi:\nDosyalanma Sebebi:\nDosya Delilleri:\n```", inline=False)
-        embed.set_footer(text="Sualtı Taarruz Komutanlığı Resmi Botu")
+        embed.set_footer(text="Su Altı Taarruz Resmi Botu")
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @discord.ui.button(label="⚖️ Ceza Formu", style=discord.ButtonStyle.secondary, custom_id="btn_ceza_form")
@@ -79,7 +79,7 @@ class FormView(View):
         embed = discord.Embed(title="⚖️ CEZA FORMU", description="Aşağıdaki şablonu kopyalayıp **Ceza Kanalına** doldurarak atabilirsiniz:", color=discord.Color.dark_gray())
         embed.add_field(name="📝 Kopyalanabilir Şablon:", value="```\nCeza neden:\nCeza veren:\nCeza alan:\nCeza alanın rütbesi:\nCeza verinin rütbesi:\nCeza:\nKanıt:\n```", inline=False)
         embed.add_field(name="📌 Not:", value="Not", inline=False)
-        embed.set_footer(text="Sualtı Taarruz Komutanlığı Resmi Botu")
+        embed.set_footer(text="Su Altı Taarruz Resmi Botu")
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
 # ================= BUTONLU KAYIT SİSTEMİ =================
@@ -102,7 +102,7 @@ class KayitModal(discord.ui.Modal, title="🔗 Roblox Hesap Bağlama"):
         pending_verifications[str(interaction.user.id)] = {"roblox_name": user_data["name"], "roblox_id": roblox_id, "code": code}
 
         embed_dm = discord.Embed(title="🔒 Gizli Roblox Doğrulama Kodu", description=f"Merhaba **{interaction.user.name}**!\nRoblox hesabını (`{user_data['name']}`) doğrulamak için özel kodun aşağıdadır:\n\n🔑 **Doğrulama Kodun:** **`{code}`**\n\n**Adımlar:**\n1️⃣ Roblox profilindeki **Bio / Hakkımda** kısmına bu kodu yapıştır.\n2️⃣ Profilini kaydettikten sonra kanaldaki **`✅ Hesabı Doğrula`** butonuna bas!", color=discord.Color.dark_gray())
-        embed_dm.set_footer(text="Sualtı Taarruz Komutanlığı - Özel Mesaj")
+        embed_dm.set_footer(text="Su Altı Taarruz - Özel Mesaj")
 
         try:
             await interaction.user.send(embed=embed_dm)
@@ -181,4 +181,29 @@ class KayitView(View):
                 print(f"Rol hatası: {e}")
 
             try:
-                await interaction.user.edit(nick=roblox_name
+                await interaction.user.edit(nick=roblox_name)
+                name_status = f" İsminiz sunucuda zorla **{roblox_name}** olarak güncellendi ve tüm kanallar açıldı!"
+            except Exception as e:
+                print(f"İsim değiştirme hatası: {e}")
+                name_status = " (Rollerin verildi ama botun rolü sunucu sahibinin veya yetkili birinin üstünde olmadığı için ismi değiştiremedi)."
+
+            await interaction.response.send_message(f"✅ **Tebrikler!** Discord hesabın **{roblox_name}** Roblox hesabıyla ve grup üyeliğin onaylanarak başarıyla doğrulandı!{name_status}", ephemeral=True)
+        else:
+            await interaction.response.send_message(f"❌ DM'den gönderilen kod Roblox profil bio'nuzda bulunamadı!\nBeklenen Kod: **`{expected_code}`**\nLütfen profilinizi güncelleyip tekrar butona basın.", ephemeral=True)
+
+# ================= BOT EVENTS & KOMUTLAR =================
+
+@bot.event
+async def on_ready():
+    bot.add_view(KayitView())
+    bot.add_view(FormView())
+    print(f'Bot {bot.user} olarak giriş yaptı ve göreve hazır!')
+
+@bot.event
+async def on_member_join(member):
+    global WELCOME_CHANNEL_ID
+    
+    restricted_role = discord.utils.get(member.guild.roles, name="Kısıtlı")
+    if not restricted_role:
+        try:
+            restricted_role = await member.guild.create_role(name="Kısıtlı", color=
