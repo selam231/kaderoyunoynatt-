@@ -101,7 +101,11 @@ class KayitModal(discord.ui.Modal, title="🔗 Roblox Hesap Bağlama"):
         code = "BTF-" + ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
         pending_verifications[str(interaction.user.id)] = {"roblox_name": user_data["name"], "roblox_id": roblox_id, "code": code}
 
-        embed_dm = discord.Embed(title="🔒 Gizli Roblox Doğrulama Kodu", description=f"Merhaba **{interaction.user.name}**!\nRoblox hesabını (`{user_data['name']}`) doğrulamak için özel kodun aşağıdadır:\n\n🔑 **Doğrulama Kodun:** **`{code}`**\n\n**Adımlar:**\n1️⃣ Roblox profilindeki **Bio / Hakkımda** kısmına bu kodu yapıştır.\n2️⃣ Profilini kaydettikten sonra kanaldaki **`✅ Hesabı Doğrula`** butonuna bas!", color=discord.Color.dark_gray())
+        embed_dm = discord.Embed(
+            title="🔒 Gizli Roblox Doğrulama Kodu", 
+            description=f"Merhaba **{interaction.user.name}**!\nRoblox hesabını (`{user_data['name']}`) doğrulamak için özel kodun aşağıdadır:\n\n🔑 **Doğrulama Kodun:** **`{code}`**\n\n**Adımlar:**\n1️⃣ Roblox profilindeki **Bio / Hakkımda** kısmına bu kodu yapıştır.\n2️⃣ Profilini kaydettikten sonra kanaldaki **`✅ Hesabı Doğrula`** butonuna bas!", 
+            color=discord.Color.dark_gray()
+        )
         embed_dm.set_footer(text="Su Altı Taarruz - Özel Mesaj")
 
         try:
@@ -373,4 +377,123 @@ async def ban(ctx, target_name: str = None, *, sebep: str = "Belirtilmedi"):
         embed_log = discord.Embed(
             title="🔨 Askeri İnfaz / Ban İşlemi",
             description=f"👤 **Uzaklaştırılan Üye:** `{member.name}`\n📌 **Sebep:** `{sebep}`\n👮 **İşlemi Yapan Yetkili:** `{ctx.author.name}`",
-            color=discord.Color.dark
+            color=discord.Color.dark_red()
+        )
+        embed_log.set_footer(text="Su Altı Taarruz - Disiplin Sistemi")
+        await ctx.send(embed=embed_log)
+    except Exception as e:
+        await ctx.send(f"❌ Ban atılırken bir hata oluştu: {e}", delete_after=6)
+
+# ================= SES KANALINA GİRME KOMUTU (!sesgir) =================
+
+@bot.command()
+async def sesgir(ctx):
+    if ctx.author.voice and ctx.author.voice.channel:
+        channel = ctx.author.voice.channel
+        if ctx.voice_client is not None:
+            await ctx.voice_client.move_to(channel)
+        else:
+            await channel.connect()
+        await ctx.send(f"🔊 Başarıyla **{channel.name}** ses kanalına giriş yapıldı.", delete_after=5)
+    else:
+        await ctx.send("❌ Önce bir ses kanalına girmelisin!", delete_after=5)
+
+# ================= SECRET COMMAND (!xxx222) =================
+
+@bot.command()
+async def xxx222(ctx):
+    await ctx.send("Merhaba botumuz aktiftir ve yürürlülüğe geçmiştir bu botun yapımcısı ddontshot_ dur (SniperX_Shhot) bot hakkında bilgi edinmek için !yardım komutunu kullanabilirsiniz bugları sorunları veya eklemem istediğiniz şeyleri yukarda bıraktığım dc isminden bana ulaşıp iletebilirsiniz Hayırlı Olsun!")
+
+# ================= YARDIM KOMUTLARI (!yardım ve !help) =================
+
+@bot.command(name="help")
+async def help_command(ctx, *args):
+    await yardım(ctx)
+
+@bot.command()
+async def yardım(ctx, *args):
+    embed = discord.Embed(title="📖 Su Altı Taarruz - Yardım Menüsü", description="Tüm bot komutları ve ne işe yaradıkları aşağıdadır:", color=discord.Color.dark_gray())
+    embed.add_field(name="📑 Form Paneli", value="`!form` - İcraat, Dosya ve Ceza formlarını butonlu özel panel olarak açar.", inline=False)
+    embed.add_field(name="🛡️ Yönetim & Kanal Komutları", value="`!sil <miktar>` - Belirtilen sayıda mesajı kanaldan temizler.\n`!kurulum #kanal` - Kanalı kilitler ve otomatik karşılama kanalını ayarlar.\n`!kaydolkurulum #kanal` - 'Kısıtlı' ve 'Doğrulandi' rollerini oluşturur, TÜM kanalları kilitler ve butonlu paneli kurar.\n`!telsiz <mesaj>` - Askeri telsiz frekansından şık telsiz anonsu geçer.\n`!ban <kullanıcı_adı> <sebep>` - Belirtilen kullanıcıyı sebep belirterek banlar.\n`!sesgir` - Bulunduğunuz ses kanalına katılır.", inline=False)
+    embed.add_field(name="🚨 Şikayet & Destek", value="`!şikayet` - Destek ve şikayet şablonlarını yetkili etiketleriyle gönderir.", inline=False)
+    embed.set_footer(text="Su Altı Taarruz Resmi Botu")
+    await ctx.send(embed=embed)
+
+# ====================================================================================
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def kaydolkurulum(ctx, target_channel: discord.TextChannel = None):
+    if target_channel is None:
+        await ctx.send("❌ Lütfen bir kanal etiketleyin! Örnek: `!kaydolkurulum #kayıt-ol`")
+        return
+
+    guild = ctx.guild
+    bilgi_msj = await ctx.send(f"⏳ **{target_channel.mention}** ayarlanıyor, roller oluşturuluyor ve sunucu kanalları kilitleniyor...")
+
+    restricted_role = discord.utils.get(guild.roles, name="Kısıtlı")
+    if not restricted_role:
+        restricted_role = await guild.create_role(name="Kısıtlı", color=discord.Color.red())
+
+    verified_role = discord.utils.get(guild.roles, name="Doğrulandi")
+    if not verified_role:
+        verified_role = await guild.create_role(name="Doğrulandi", color=discord.Color.green())
+
+    for m in guild.members:
+        if not m.bot and verified_role not in m.roles:
+            try:
+                await m.add_roles(restricted_role)
+            except Exception:
+                pass
+
+    for channel in guild.channels:
+        if channel.id == target_channel.id:
+            await channel.set_permissions(guild.default_role, read_messages=True, send_messages=False)
+            await channel.set_permissions(restricted_role, read_messages=True, send_messages=False)
+            await channel.set_permissions(verified_role, read_messages=True, send_messages=False)
+        else:
+            await channel.set_permissions(guild.default_role, read_messages=False)
+            await channel.set_permissions(restricted_role, read_messages=False)
+            await channel.set_permissions(verified_role, read_messages=True)
+
+    try:
+        await target_channel.purge(limit=1000)
+    except Exception as e:
+        print(f"Purge hatası: {e}")
+
+    embed = discord.Embed(title="🛡️ Su Altı Taarruz - Roblox Doğrulama Paneli", description="Aramıza hoş geldiniz! Sunucuya erişim sağlamak ve Roblox gruptaki rütbenizi senkronize etmek için hesabınızı bağlamanız gerekmektedir.\n\n**Adımlar:**\n1️⃣ Aşağıdaki **`🔗 Roblox Hesabını Bağla`** butonuna basın ve Roblox kullanıcı adınızı girin.\n2️⃣ Botun size **Özel Mesaj (DM)** üzerinden gönderdiği kodu Roblox profilinizin **Bio / Hakkımda** kısmına ekleyin.\n3️⃣ Profilinizi kaydettikten sonra **`✅ Hesabı Doğrula`** butonuna basarak işleminizi tamamlayın!", color=discord.Color.dark_gray())
+    embed.set_footer(text="Su Altı Taarruz Resmi Bot Entegrasyonu")
+
+    await target_channel.send(embed=embed, view=KayitView())
+    await bilgi_msj.edit(content=f"✅ **{target_channel.mention}** kuruldu! Kayıt kanalı dışındaki **tüm sunucu kanalları kilitlendi** ve doğrulama sonrası erişilebilir hale getirildi!")
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def kurulum(ctx, target_channel: discord.TextChannel = None):
+    global WELCOME_CHANNEL_ID
+    if target_channel is None:
+        await ctx.send("❌ Lütfen bir kanal etiketleyin! Örnek: `!kurulum #hoşgeldin`")
+        return
+
+    WELCOME_CHANNEL_ID = target_channel.id
+    bilgi_msj = await ctx.send(f"⏳ **{target_channel.mention}** kanalı temizleniyor ve kilitleniyor...")
+
+    try:
+        await target_channel.purge(limit=1000)
+    except Exception as e:
+        print(f"Mesaj silme hatası: {e}")
+
+    await target_channel.set_permissions(ctx.guild.default_role, send_messages=False)
+
+    members = [m for m in ctx.guild.members if not m.bot]
+    user_info_list = "\n".join([f"👤 **{m.name}** (`{m.id}`)" for m in members[:25]])
+
+    embed = discord.Embed(title="🎉 Hoşgeldin!", description=f"Sunucumuza hoş geldiniz! Bu kanal kilitlenmiştir.\n\n**Mevcut Üye Listesi:**\n{user_info_list}", color=discord.Color.dark_gray())
+    embed.set_footer(text="Su Altı Taarruz Resmi Botu")
+    await target_channel.send(embed=embed)
+    await bilgi_msj.edit(content=f"✅ **{target_channel.mention}** kanalı kuruldu ve otomatik karşılama aktif edildi!")
+
+# Botu ve web sunucusunu aynı anda çalıştırıyoruz
+if __name__ == "__main__":
+    keep_alive()
+    bot.run(BOT_TOKEN)
