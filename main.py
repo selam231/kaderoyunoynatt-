@@ -181,4 +181,196 @@ class KayitView(View):
                 print(f"Rol hatası: {e}")
 
             try:
-                await interaction.user.edit
+                await interaction.user.edit(nick=roblox_name)
+                name_status = f" İsminiz sunucuda zorla **{roblox_name}** olarak güncellendi ve tüm kanallar açıldı!"
+            except Exception as e:
+                print(f"İsim değiştirme hatası: {e}")
+                name_status = " (Rollerin verildi ama botun rolü sunucu sahibinin veya yetkili birinin üstünde olmadığı için ismi değiştiremedi)."
+
+            await interaction.response.send_message(f"✅ **Tebrikler!** Discord hesabın **{roblox_name}** Roblox hesabıyla ve grup üyeliğin onaylanarak başarıyla doğrulandı!{name_status}", ephemeral=True)
+        else:
+            await interaction.response.send_message(f"❌ DM'den gönderilen kod Roblox profil bio'nuzda bulunamadı!\nBeklenen Kod: **`{expected_code}`**\nLütfen profilinizi güncelleyip tekrar butona basın.", ephemeral=True)
+
+# ================= BOT EVENTS & KOMUTLAR =================
+
+@bot.event
+async def on_ready():
+    bot.add_view(KayitView())
+    bot.add_view(FormView())
+    print(f'Bot {bot.user} olarak giriş yaptı ve göreve hazır!')
+
+@bot.event
+async def on_member_join(member):
+    global WELCOME_CHANNEL_ID
+    
+    restricted_role = discord.utils.get(member.guild.roles, name="Kısıtlı")
+    if not restricted_role:
+        try:
+            restricted_role = await member.guild.create_role(name="Kısıtlı", color=discord.Color.red())
+        except Exception:
+            pass
+
+    if restricted_role:
+        try:
+            await member.add_roles(restricted_role)
+        except Exception:
+            pass
+
+    channel = None
+    if WELCOME_CHANNEL_ID:
+        channel = member.guild.get_channel(WELCOME_CHANNEL_ID)
+    
+    if channel is None:
+        for ch in member.guild.text_channels:
+            if "hoşgeldin" in ch.name.lower() or "welcome" in ch.name.lower() or "giriş" in ch.name.lower():
+                channel = ch
+                break
+                
+    if channel is None and member.guild.text_channels:
+        channel = member.guild.text_channels[0]
+
+    if channel:
+        embed = discord.Embed(title="🎉 Yeni Üye Katıldı!", description=f"Aramıza hoş geldin {member.mention}!\n\n👤 **Kullanıcı Adı:** `{member.name}`\n🆔 **Discord ID:** `{member.id}`", color=discord.Color.dark_gray())
+        embed.set_thumbnail(url=member.display_avatar.url)
+        embed.set_footer(text="Su Altı Taarruz Resmi Botu")
+        await channel.send(content=f"👋 Hoş geldin {member.mention}!", embed=embed)
+
+@bot.command()
+async def form(ctx):
+    embed = discord.Embed(title="📑 Su Altı Taarruz - Form Paneli", description="Lütfen almak istediğiniz form butonuna tıklayın. Form şablonu **sadece sizin görebileceğiniz şekilde** açılacaktır.", color=discord.Color.dark_gray())
+    embed.set_footer(text="Su Altı Taarruz Resmi Botu")
+    await ctx.send(embed=embed, view=FormView())
+
+@bot.command()
+async def şikayet(ctx):
+    rol_enstitu = discord.utils.get(ctx.guild.roles, name="Güvenlik Enstitüsü")
+    rol_baskan = discord.utils.get(ctx.guild.roles, name="Güvenlik Enstitüsü Başkanı")
+    
+    tag_metin = f"{rol_enstitu.mention if rol_enstitu else '@Güvenlik Enstitüsü'} {rol_baskan.mention if rol_baskan else '@Güvenlik Enstitüsü Başkanı'}"
+
+    embed = discord.Embed(title="🚨 Ticket & Şikayet Formları", description="Aşağıdaki şablonları kopyalarak ilgili kanala iletebilirsiniz:", color=discord.Color.dark_gray())
+    
+    embed.add_field(name="🎫 DESTEK TİCKETİ", value="```\nİsim:\nSorun:\nSS:\n```", inline=False)
+    embed.add_field(name="⚖️ ŞİKAYET TİCKETİ", value="```\nİsim:\nKit Rütbe:\nŞikayet Edilenin İsim:\nKit Rütbesi:\nSS:\n```", inline=False)
+    
+    embed.add_field(name="📌 Yetkili Etiketleri", value=tag_metin, inline=False)
+    embed.set_footer(text="Su Altı Taarruz Resmi Botu")
+    
+    await ctx.send(embed=embed)
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def xmesaj(ctx, *, mesaj: str = None):
+    try:
+        await ctx.message.delete()
+    except Exception:
+        pass
+
+    if not mesaj:
+        await ctx.send("❌ Lütfen duyuru metnini yazın! Örnek: `!xmesaj Buraya yazılacak şey`", delete_after=5)
+        return
+
+    embed = discord.Embed(title="📢 Su Altı Taarruz Duyurusu", description=mesaj, color=discord.Color.dark_gray())
+    embed.set_footer(text=f"Yetkili: {ctx.author.name}", icon_url=ctx.author.display_avatar.url)
+
+    await ctx.send(embed=embed)
+
+@bot.command()
+@commands.has_permissions(manage_messages=True)
+async def sil(ctx, amount: int = None):
+    if amount is None or amount <= 0:
+        await ctx.send("❌ Lütfen silinecek mesaj sayısını girin! Örnek: `!sil 10`", delete_after=5)
+        return
+
+    deleted = await ctx.channel.purge(limit=amount + 1)
+    confirm_msg = await ctx.send(f"🗑️ **{len(deleted)-1}** adet mesaj başarıyla silindi!")
+    await confirm_msg.delete(delay=3)
+
+# ================= GİZLİ DM GÖNDERME KOMUTU (!xxdm) =================
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def xxdm(ctx, target_name: str = None, *, mesaj: str = None):
+    try:
+        await ctx.message.delete()
+    except Exception:
+        pass
+
+    if not target_name or not mesaj:
+        await ctx.send("❌ Eksik kullanım! Örnek: `!xxdm ahmet123 Merhaba bu gizli bir mesajdır.`", delete_after=5)
+        return
+
+    member = discord.utils.find(lambda m: target_name.lower() in m.name.lower() or (m.nick and target_name.lower() in m.nick.lower()), ctx.guild.members)
+
+    if not member:
+        await ctx.send(f"❌ **{target_name}** adında bir kullanıcı bu sunucuda bulunamadı!", delete_after=5)
+        return
+
+    try:
+        embed = discord.Embed(title="🔒 Su Altı Taarruz - Özel Bilgilendirme", description=mesaj, color=discord.Color.dark_gray())
+        embed.set_footer(text="Bu mesaj yetkili tarafından gizli olarak gönderilmiştir.")
+        await member.send(embed=embed)
+    except discord.Forbidden:
+        await ctx.send(f"⚠️ **{member.name}** adlı kullanıcının DM (Özel Mesaj) kutusu kapalı, mesaj iletilemedi!", delete_after=6)
+    except Exception as e:
+        print(f"xxdm hatası: {e}")
+
+# ================= TELSİZ ANONS KOMUTU (!telsiz) =================
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def telsiz(ctx, *, mesaj: str = None):
+    try:
+        await ctx.message.delete()
+    except Exception:
+        pass
+
+    if not mesaj:
+        temp = await ctx.send("❌ Lütfen telsiz mesajını yazın! Örnek: `!telsiz Bölge güvenli, herkes yerini alsın.`", delete_after=5)
+        return
+
+    embed = discord.Embed(
+        title="🔴 ─── TELSİZ ANONS - KANAL 1 ───", 
+        description=f"📡 **Yayın Yapan Yetkili:** `{ctx.author.name}`\n\n💬 **Mesaj:**\n```{mesaj}```", 
+        color=discord.Color.dark_red()
+    )
+    embed.set_footer(text="Su Altı Taarruz - Askeri Haberleşme Sistemi")
+    
+    await ctx.send(embed=embed)
+
+# ================= YETKİLİ BAN KOMUTU (!ban) =================
+
+@bot.command()
+@commands.has_permissions(administrator=True)
+async def ban(ctx, target_name: str = None, *, sebep: str = "Belirtilmedi"):
+    try:
+        await ctx.message.delete()
+    except Exception:
+        pass
+
+    if not target_name:
+        await ctx.send("❌ Eksik kullanım! Örnek: `!ban ahmet123 Kurallara uymamak`", delete_after=5)
+        return
+
+    member = discord.utils.find(lambda m: target_name.lower() in m.name.lower() or (m.nick and target_name.lower() in m.nick.lower()), ctx.guild.members)
+
+    if not member:
+        await ctx.send(f"❌ **{target_name}** adında bir kullanıcı bu sunucuda bulunamadı!", delete_after=5)
+        return
+
+    try:
+        embed_dm = discord.Embed(
+            title="🔨 Su Altı Taarruz - Uzaklaştırma (Ban)",
+            description=f"Sunucumuzdan kalıcı olarak uzaklaştırıldınız.\n\n🛡️ **Sunucu:** `{ctx.guild.name}`\n📌 **Sebep:** `{sebep}`\n👮 **Yetkili:** `{ctx.author.name}`",
+            color=discord.Color.dark_red()
+        )
+        await member.send(embed_dm)
+    except Exception:
+        pass
+
+    try:
+        await member.ban(reason=sebep)
+        embed_log = discord.Embed(
+            title="🔨 Askeri İnfaz / Ban İşlemi",
+            description=f"👤 **Uzaklaştırılan Üye:** `{member.name}`\n📌 **Sebep:** `{sebep}`\n👮 **İşlemi Yapan Yetkili:** `{ctx.author.name}`",
+            color=discord.Color.dark
