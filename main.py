@@ -181,29 +181,4 @@ class KayitView(View):
                 print(f"Rol hatası: {e}")
 
             try:
-                await interaction.user.edit(nick=roblox_name)
-                name_status = f" İsminiz sunucuda zorla **{roblox_name}** olarak güncellendi ve tüm kanallar açıldı!"
-            except Exception as e:
-                print(f"İsim değiştirme hatası: {e}")
-                name_status = " (Rollerin verildi ama botun rolü sunucu sahibinin veya yetkili birinin üstünde olmadığı için ismi değiştiremedi)."
-
-            await interaction.response.send_message(f"✅ **Tebrikler!** Discord hesabın **{roblox_name}** Roblox hesabıyla ve grup üyeliğin onaylanarak başarıyla doğrulandı!{name_status}", ephemeral=True)
-        else:
-            await interaction.response.send_message(f"❌ DM'den gönderilen kod Roblox profil bio'nuzda bulunamadı!\nBeklenen Kod: **`{expected_code}`**\nLütfen profilinizi güncelleyip tekrar butona basın.", ephemeral=True)
-
-# ================= BOT EVENTS & KOMUTLAR =================
-
-@bot.event
-async def on_ready():
-    bot.add_view(KayitView())
-    bot.add_view(FormView())
-    print(f'Bot {bot.user} olarak giriş yaptı ve göreve hazır!')
-
-@bot.event
-async def on_member_join(member):
-    global WELCOME_CHANNEL_ID
-    
-    restricted_role = discord.utils.get(member.guild.roles, name="Kısıtlı")
-    if not restricted_role:
-        try:
-            restricted_role = await member.guild.create_role(name="Kısıtlı", color=
+                await interaction.user.edit
